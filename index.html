@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StrideFit Equestrian</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f6f5;
+    color: #333;
+  }
+
+  header {
+    background: #4a6b5f;
+    color: white;
+    padding: 30px;
+    text-align: center;
+  }
+
+  section {
+    padding: 25px;
+    max-width: 700px;
+    margin: auto;
+  }
+
+  h2 { text-align: center; }
+
+  .card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+
+  input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+
+  button {
+    background: #e6b566;
+    border: none;
+    font-weight: bold;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .badge {
+    background: #4a6b5f;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 5px;
+    font-size: 14px;
+  }
+
+  .unlocked {
+    background: #e6b566;
+    color: #4a6b5f;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>StrideFit Equestrian</h1>
+  <p>Your free fitness app for riders & horses</p>
+</header>
+
+<section>
+
+  <!-- WORKOUT TRACKER -->
+  <div class="card">
+    <h2>Add Workout</h2>
+    <input id="workoutName" placeholder="Workout name">
+    <input id="workoutMinutes" type="number" placeholder="Minutes">
+    <button onclick="addWorkout()">Save Workout</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="card">
+    <h2>Your Progress</h2>
+    <p><strong>Total Minutes:</strong> <span id="totalMinutes">0</span></p>
+    <p><strong>Workouts:</strong> <span id="workoutCount">0</span></p>
+    <p><strong>Level:</strong> <span id="level">1</span></p>
+  </div>
+
+  <!-- WORKOUT LIST -->
+  <div class="card">
+    <h2>Workout History</h2>
+    <ul id="workoutList"></ul>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="card">
+    <h2>Achievements</h2>
+    <div id="achievements">
+      <span class="badge" id="a1">First Workout</span>
+      <span class="badge" id="a2">50 Minutes</span>
+      <span class="badge" id="a3">100 Minutes</span>
+      <span class="badge" id="a4">10 Workouts</span>
+    </div>
+  </div>
+
+  <!-- SUGGESTIONS -->
+  <div class="card">
+    <h2>Suggested Workout</h2>
+    <p id="suggestion">Add your first workout to get suggestions.</p>
+  </div>
+
+</section>
+
+<footer>
+  StrideFit Equestrian — Free Forever 🐎
+</footer>
+
+<script>
+let workouts = JSON.parse(localStorage.getItem("workouts")) || [];
+let totalMinutes = JSON.parse(localStorage.getItem("totalMinutes")) || 0;
+
+function updateUI() {
+  document.getElementById("workoutList").innerHTML = "";
+  workouts.forEach(w => {
+    const li = document.createElement("li");
+    li.textContent = `${w.name} — ${w.minutes} min`;
+    document.getElementById("workoutList").appendChild(li);
+  });
+
+  document.getElementById("totalMinutes").textContent = totalMinutes;
+  document.getElementById("workoutCount").textContent = workouts.length;
+
+  let level = Math.floor(totalMinutes / 50) + 1;
+  document.getElementById("level").textContent = level;
+
+  unlockAchievements();
+  updateSuggestion();
+}
+
+function addWorkout() {
+  const name = document.getElementById("workoutName").value;
+  const minutes = parseInt(document.getElementById("workoutMinutes").value);
+
+  if (!name || minutes <= 0) return alert("Enter valid workout");
+
+  workouts.push({ name, minutes });
+  totalMinutes += minutes;
+
+  localStorage.setItem("workouts", JSON.stringify(workouts));
+  localStorage.setItem("totalMinutes", JSON.stringify(totalMinutes));
+
+  document.getElementById("workoutName").value = "";
+  document.getElementById("workoutMinutes").value = "";
+
+  updateUI();
+}
+
+function unlockAchievements() {
+  if (workouts.length >= 1) document.getElementById("a1").classList.add("unlocked");
+  if (totalMinutes >= 50) document.getElementById("a2").classList.add("unlocked");
+  if (totalMinutes >= 100) document.getElementById("a3").classList.add("unlocked");
+  if (workouts.length >= 10) document.getElementById("a4").classList.add("unlocked");
+}
+
+function updateSuggestion() {
+  let text = "Stretch & mobility session (10 min)";
+  if (totalMinutes < 30) text = "Core balance workout (10 min)";
+  else if (totalMinutes < 75) text = "Strength & posture workout (15 min)";
+  else if (totalMinutes < 150) text = "Advanced rider stability (20 min)";
+  else text = "Active recovery & flexibility";
+
+  document.getElementById("suggestion").textContent = text;
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
