@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StrideFit Equestrian</title>
+
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f5; }
+  header { background: #4a6b5f; color: white; padding: 25px; text-align: center; }
+  section { padding: 20px; max-width: 700px; margin: auto; }
+  .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 6px 18px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 10px; border: 1px solid #ccc; }
+  button { background: #e6b566; border: none; font-weight: bold; }
+  .hidden { display: none; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 6px 0; border-bottom: 1px solid #eee; }
+  .badge { background: #4a6b5f; color: white; padding: 6px 14px; border-radius: 20px; margin: 4px; display: inline-block; }
+  .unlocked { background: #e6b566; color: #4a6b5f; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>StrideFit Equestrian</h1>
+  <p id="welcomeText">Free fitness app for riders</p>
+</header>
+
+<!-- SIGN IN -->
+<section id="authSection">
+  <div class="card">
+    <h2>Sign In / Sign Up</h2>
+    <input id="nameInput" placeholder="Your name">
+    <input id="emailInput" placeholder="Email">
+    <button onclick="signIn()">Continue</button>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="appSection" class="hidden">
+
+  <div class="card">
+    <button onclick="signOut()">Sign Out</button>
+  </div>
+
+  <div class="card">
+    <h2>Add Workout</h2>
+    <input id="workoutName" placeholder="Workout name">
+    <input id="workoutMinutes" type="number" placeholder="Minutes">
+    <button onclick="addWorkout()">Save Workout</button>
+  </div>
+
+  <div class="card">
+    <h2>Your Progress</h2>
+    <p>Total Minutes: <span id="totalMinutes">0</span></p>
+    <p>Workouts: <span id="workoutCount">0</span></p>
+    <p>Level: <span id="level">1</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Workout History</h2>
+    <ul id="workoutList"></ul>
+  </div>
+
+  <div class="card">
+    <h2>Achievements</h2>
+    <span class="badge" id="a1">First Workout</span>
+    <span class="badge" id="a2">50 Minutes</span>
+    <span class="badge" id="a3">100 Minutes</span>
+  </div>
+
+  <div class="card">
+    <h2>Suggested Workout</h2>
+    <p id="suggestion"></p>
+  </div>
+
+</section>
+
+<script>
+let user = JSON.parse(localStorage.getItem("stridefitUser"));
+let workouts = [];
+let totalMinutes = 0;
+
+function signIn() {
+  const name = nameInput.value;
+  const email = emailInput.value;
+  if (!name || !email) return alert("Enter name and email");
+
+  user = { name, email };
+  localStorage.setItem("stridefitUser", JSON.stringify(user));
+
+  loadUserData();
+}
+
+function signOut() {
+  localStorage.removeItem("stridefitUser");
+  location.reload();
+}
+
+function loadUserData() {
+  document.getElementById("authSection").classList.add("hidden");
+  document.getElementById("appSection").classList.remove("hidden");
+  document.getElementById("welcomeText").textContent = `Welcome, ${user.name}`;
+
+  workouts = JSON.parse(localStorage.getItem(user.email + "_workouts")) || [];
+  totalMinutes = JSON.parse(localStorage.getItem(user.email + "_minutes")) || 0;
+
+  updateUI();
+}
+
+function addWorkout() {
+  const name = workoutName.value;
+  const minutes = parseInt(workoutMinutes.value);
+  if (!name || minutes <= 0) return alert("Invalid workout");
+
+  workouts.push({ name, minutes });
+  totalMinutes += minutes;
+
+  localStorage.setItem(user.email + "_workouts", JSON.stringify(workouts));
+  localStorage.setItem(user.email + "_minutes", JSON.stringify(totalMinutes));
+
+  workoutName.value = "";
+  workoutMinutes.value = "";
+  updateUI();
+}
+
+function updateUI() {
+  workoutList.innerHTML = "";
+  workouts.forEach(w => {
+    const li = document.createElement("li");
+    li.textContent = `${w.name} — ${w.minutes} min`;
+    workoutList.appendChild(li);
+  });
+
+  totalMinutesSpan = document.getElementById("totalMinutes");
+  workoutCountSpan = document.getElementById("workoutCount");
+  levelSpan = document.getElementById("level");
+
+  totalMinutesSpan.textContent = totalMinutes;
+  workoutCountSpan.textContent = workouts.length;
+  levelSpan.textContent = Math.floor(totalMinutes / 50) + 1;
+
+  if (workouts.length >= 1) a1.classList.add("unlocked");
+  if (totalMinutes >= 50) a2.classList.add("unlocked");
+  if (totalMinutes >= 100) a3.classList.add("unlocked");
+
+  updateSuggestion();
+}
+
+function updateSuggestion() {
+  let s = "Stretch & mobility (10 min)";
+  if (totalMinutes < 30) s = "Core balance workout (10 min)";
+  else if (totalMinutes < 75) s = "Strength & posture (15 min)";
+  else s = "Active recovery ride";
+
+  suggestion.textContent = s;
+}
+
+if (user) loadUserData();
+</script>
+
+</body>
+</html>
